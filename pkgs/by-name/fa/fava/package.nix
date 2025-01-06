@@ -1,17 +1,17 @@
 {
   lib,
-  python3Packages,
   fetchPypi,
+  python3Packages,
 }:
 
 python3Packages.buildPythonApplication rec {
   pname = "fava";
-  version = "1.29";
+  version = "1.30";
   pyproject = true;
 
   src = fetchPypi {
     inherit pname version;
-    hash = "sha256-UZZ142FchYXqPtHb6EWnKjV+xtJ0Gvu+SovTH6+kVn8=";
+    hash = "sha256-HBvsFflKGPVlHc9pHB8VCGGD1WLDT9TbjL1V41C3hKU=";
   };
 
   postPatch = ''
@@ -24,6 +24,8 @@ python3Packages.buildPythonApplication rec {
   dependencies = with python3Packages; [
     babel
     beancount
+    beangulp
+    beanquery
     cheroot
     click
     flask
@@ -39,17 +41,22 @@ python3Packages.buildPythonApplication rec {
 
   nativeCheckInputs = [ python3Packages.pytestCheckHook ];
 
-  preCheck = ''
-    export HOME=$TEMPDIR
-  '';
+  preCheck =
+    ''
+      export HOME=$TEMPDIR
+    ''
+    # Disable some tests when building with beancount2
+    + lib.optionalString (lib.versions.major python3Packages.beancount.version == "2") ''
+      export SNAPSHOT_IGNORE=true
+    '';
 
-  meta = with lib; {
+  meta = {
     description = "Web interface for beancount";
     mainProgram = "fava";
     homepage = "https://beancount.github.io/fava";
     changelog = "https://beancount.github.io/fava/changelog.html";
-    license = licenses.mit;
-    maintainers = with maintainers; [
+    license = lib.licenses.mit;
+    maintainers = with lib.maintainers; [
       bhipple
       sigmanificient
     ];
